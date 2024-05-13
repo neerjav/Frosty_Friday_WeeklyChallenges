@@ -1,0 +1,38 @@
+CREATE WAREHOUSE FF_WH; 
+
+CREATE DATABASE FROSTY_FRIDAYS;
+
+USE DATABASE FROSTY_FRIDAYS;
+
+USE WAREHOUSE FF_WH;
+
+
+
+CREATE OR REPLACE FILE FORMAT my_csv_format
+  TYPE = CSV
+  FIELD_DELIMITER = '|'
+  SKIP_HEADER = 1
+  NULL_IF = ('totally_empty', 'null', 'NULL')
+  EMPTY_FIELD_AS_NULL = true;
+
+
+CREATE STAGE mystage
+  URL='s3://frostyfridaychallenges/challenge_1/';
+
+list @mystage;
+
+SELECT $1 from @mystage (file_format => 'my_csv_format');
+
+CREATE OR REPLACE TABLE FROSTY_FRIDAYS.PUBLIC.challenge_1
+(
+
+TEXT_VALUE TEXT,
+LOAD_TMSP TIMESTAMP_NTZ(9)
+);
+
+COPY INTO challenge_1
+FROM (SELECT $1, CURRENT_TIMESTAMP() from @mystage)
+FILE_FORMAT='my_csv_format'
+;
+
+SELECT * FROM challenge_1;
